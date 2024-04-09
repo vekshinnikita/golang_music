@@ -1,0 +1,5 @@
+.idea
+commands.txt
+pgdata
+media
+**/**/.env

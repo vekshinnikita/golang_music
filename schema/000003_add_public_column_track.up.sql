@@ -1,0 +1,2 @@
+ALTER TABLE tracks 
+ADD public BOOLEAN not null DEFAULT TRUE;

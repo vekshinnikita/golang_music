@@ -1,0 +1,12 @@
+port: 8000
+
+db: 
+  host: "localhost"
+  port: "5432"
+  username: "postgres"
+  dbname: "postgres"
+  sslmode: "disable"
+
+media:
+  tracks_folder: "media/users/{user_id}/tracks"
+  posters_folder: "media/users/{user_id}/posters"

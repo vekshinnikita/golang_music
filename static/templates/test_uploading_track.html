@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <style>
+        .wrapper-form-track{
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .wrapper-progress-bar{
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .wrapper-form-track > button {
+            width: 100px;
+        }
+
+        .progress-bar{
+            height: 4px;
+            width: 400px;
+            position: relative;
+        }
+
+        .progress-bar-line{
+            height: 100%;
+            width: 0;
+            background-color: blue;
+        }
+    </style>
+
+    <div class="wrapper-form-track">
+        <input type="file" id="trackInput">
+        <div class="wrapper-progress-bar">
+            <span id="progress-bar-value">0%</span>
+            <div class="progress-bar" >
+                <div id="progress-bar" class="progress-bar-line"></div>
+            </div>
+        </div>
+        <button
+            type="button"
+            onclick="submitTrack()"
+            >
+            Upload track
+        </button>
+    </div>
+
+    <script>
+
+        const chunkSize = 10* 1024 * 1024
+        const submitTrack = () => {
+            createChunk(0)
+        }
+
+        const createChunk = (start) => {
+            const trackInput = document.getElementById("trackInput")
+            const file = trackInput.files[0]
+
+            const chunkEnd = Math.min(start + chunkSize , file.size);
+
+            const chunk = file.slice(start, chunkEnd)
+            console.log(start, chunkEnd)
+
+            postChunk(chunk, start, chunkEnd, file.size)
+        }
+
+        const postChunk = async(file, from, to, size) => {
+            const formData = new FormData()
+            formData.append('file', file)
+            formData.append('trackId', 1)
+
+            await fetch("http://localhost:8000/api/track/upload", {
+                // mode: 'no-cors',
+                body: formData,
+                // withCredentials: true,
+                // credentials: 'include',
+                headers: {
+                    // "Content-Type": "application/x-www-form-urlencoded",
+                    "Authorization": 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDg1NjAwNTcsImlhdCI6MTcwODUxNjg1NywidXNlcl9pZCI6MX0.-mnjimyhh3BCvXUmHoeGa2O6Yymcx84Bu8nmQwe4RfI',
+                    "Content-Range": `bytes ${from}-${to-1}/${size}`
+                },
+                method: "post",
+            })
+            .then(async (result) => {
+                
+                if(result.ok){
+                    const response = await result.json()
+                    updateProgressBar(response)
+                    if(to < size){
+                        createChunk(from+chunkSize)
+                    }
+                } else {
+                    const response = await result.json()
+                    
+                    alert(response.Message)
+                }
+                
+            })
+        }
+        const updateProgressBar = (response) => {
+            let percentage = response.percentage
+                if(response.status == 'uploaded'){
+                    console.log(response.status)
+                    percentage = 100
+                }
+                const progressBar = document.getElementById('progress-bar')
+                const progressBarValue = document.getElementById('progress-bar-value')
+                
+                progressBarValue.innerHTML = `${percentage}%`
+                progressBar.style.width = `${percentage}%`
+        }
+    </script>
+    
+</body>
+</html>
